@@ -1,40 +1,39 @@
-// Aula 1 - Configuração inicial e botão de clique
-
-// 1. Criamos um novo projeto Expo com:
-//    npx create-expo-app my-cookie-clicker
-// 2. Navegamos até a pasta do projeto:
-//    cd my-cookie-clicker
-// 3. Rodamos o projeto com:
-//    npx expo start
-
-// Agora, editamos o arquivo App.js para criar o botão de clique
+// Aula 2 - Adicionando upgrades para aumentar os pontos por clique
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function App() {
-  // Criamos um estado para armazenar a quantidade de cookies
   const [cookies, setCookies] = useState(0);
+  const [clickPower, setClickPower] = useState(1);
 
-  // Função que será chamada quando o botão for pressionado
+  // Função para incrementar os cookies conforme o poder de clique
   const handleClick = () => {
-    setCookies(cookies + 1); // Incrementa a contagem de cookies
+    setCookies(cookies + clickPower);
+  };
+
+  // Função para comprar um upgrade e aumentar o poder de clique
+  const buyUpgrade = () => {
+    if (cookies >= 10) { // Custa 10 cookies para melhorar o clique
+      setCookies(cookies - 10);
+      setClickPower(clickPower + 1);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Exibe a quantidade de cookies na tela */}
       <Text style={styles.text}>Cookies: {cookies}</Text>
-      
-      {/* Botão para clicar e aumentar os cookies */}
       <TouchableOpacity style={styles.button} onPress={handleClick}>
         <Text style={styles.buttonText}>Clique para ganhar cookies!</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.upgradeButton} onPress={buyUpgrade}>
+        <Text style={styles.buttonText}>Upgrade (+1 por clique) - Custa 10 cookies</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-// Estilos para os componentes da interface
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -48,6 +47,12 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#ff9800',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  upgradeButton: {
+    backgroundColor: '#4caf50',
     padding: 15,
     borderRadius: 10,
   },
