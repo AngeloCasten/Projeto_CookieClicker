@@ -1,19 +1,39 @@
-// Aula 3 - Adicionando Auto-Clicker (ganha cookies automaticamente a cada segundo)
+// Aula 4 - Salvando progresso com armazenamento local
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   const [cookies, setCookies] = useState(0);
   const [clickPower, setClickPower] = useState(1);
   const [autoClickers, setAutoClickers] = useState(0);
 
-  // Clique manual
+  // Carrega os dados salvos ao iniciar o app
+  useEffect(() => {
+    const loadData = async () => {
+      const savedCookies = await AsyncStorage.getItem('cookies');
+      const savedClickPower = await AsyncStorage.getItem('clickPower');
+      const savedAutoClickers = await AsyncStorage.getItem('autoClickers');
+
+      if (savedCookies !== null) setCookies(parseInt(savedCookies));
+      if (savedClickPower !== null) setClickPower(parseInt(savedClickPower));
+      if (savedAutoClickers !== null) setAutoClickers(parseInt(savedAutoClickers));
+    };
+    loadData();
+  }, []);
+
+  // Salva os dados sempre que algo mudar
+  useEffect(() => {
+    AsyncStorage.setItem('cookies', cookies.toString());
+    AsyncStorage.setItem('clickPower', clickPower.toString());
+    AsyncStorage.setItem('autoClickers', autoClickers.toString());
+  }, [cookies, clickPower, autoClickers]);
+
   const handleClick = () => {
     setCookies(cookies + clickPower);
   };
 
-  // Upgrade de clique manual
   const buyUpgrade = () => {
     if (cookies >= 10) {
       setCookies(cookies - 10);
@@ -21,21 +41,18 @@ export default function App() {
     }
   };
 
-  // Compra de auto-clicker
   const buyAutoClicker = () => {
-    if (cookies >= 50) { // Auto-clicker custa 50 cookies
+    if (cookies >= 50) {
       setCookies(cookies - 50);
       setAutoClickers(autoClickers + 1);
     }
   };
 
-  // Efeito colateral para auto-clickers: a cada segundo, adiciona cookies
   useEffect(() => {
     const interval = setInterval(() => {
       setCookies(prev => prev + autoClickers);
-    }, 1000); // a cada 1 segundo
-
-    return () => clearInterval(interval); // limpa o intervalo se algo mudar
+    }, 1000);
+    return () => clearInterval(interval);
   }, [autoClickers]);
 
   return (
