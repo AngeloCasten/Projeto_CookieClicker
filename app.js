@@ -1,4 +1,4 @@
-// Aula 11 - Sistema de Missões e Conquistas
+// Aula 11 - Sistema de Missões, Conquistas e Metas Diárias
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
@@ -9,7 +9,11 @@ export default function App() {
   const [autoClickers, setAutoClickers] = useState(0);
   const [achievements, setAchievements] = useState([]);
 
-  // Lista de conquistas baseadas em metas de cookies
+  // Metas diárias
+  const [dailyGoal, setDailyGoal] = useState(100);
+  const [dailyProgress, setDailyProgress] = useState(0);
+  const [lastLogin, setLastLogin] = useState(new Date().toDateString());
+
   const achievementsList = [
     { id: 1, name: 'Primeiros 10 Cookies!', goal: 10 },
     { id: 2, name: 'Chegou a 100 Cookies!', goal: 100 },
@@ -20,6 +24,7 @@ export default function App() {
 
   const handleClick = () => {
     setCookies(cookies + clickPower);
+    setDailyProgress(prev => prev + clickPower);
   };
 
   const buyUpgrade = () => {
@@ -61,11 +66,38 @@ export default function App() {
     });
   }, [cookies, autoClickers, clickPower]);
 
+  // Checa diariamente se é um novo dia e reinicia a meta
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const today = new Date().toDateString();
+      if (lastLogin !== today) {
+        resetDailyGoal();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [lastLogin]);
+
+  const resetDailyGoal = () => {
+    setDailyGoal(100);
+    setDailyProgress(0);
+    setLastLogin(new Date().toDateString());
+  };
+
+  // Alerta ao atingir a meta diária
+  useEffect(() => {
+    if (dailyProgress >= dailyGoal) {
+      Alert.alert("Meta Diária Concluída!", "Você ganhou 100 cookies hoje!");
+    }
+  }, [dailyProgress]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Cookies: {cookies}</Text>
       <Text style={styles.text}>Poder de Clique: {clickPower}</Text>
       <Text style={styles.text}>Auto-Clickers: {autoClickers}</Text>
+      <Text style={styles.text}>Meta Diária: {dailyGoal} cookies</Text>
+      <Text style={styles.text}>Progresso Diário: {dailyProgress}</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleClick}>
         <Text style={styles.buttonText}>Clique para ganhar cookies!</Text>
