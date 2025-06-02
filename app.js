@@ -1,19 +1,19 @@
-// Aula 11 - Sistema de Missões, Conquistas e Metas Diárias
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Animated, Image } from 'react-native';
+import { Audio } from 'expo-av';
 
 export default function App() {
   const [cookies, setCookies] = useState(0);
   const [clickPower, setClickPower] = useState(1);
   const [autoClickers, setAutoClickers] = useState(0);
   const [achievements, setAchievements] = useState([]);
-
+  const [sound, setSound] = useState();
+  const scale = useRef(new Animated.Value(1)).current;
   // Metas diárias
   const [dailyGoal, setDailyGoal] = useState(100);
   const [dailyProgress, setDailyProgress] = useState(0);
   const [lastLogin, setLastLogin] = useState(new Date().toDateString());
-
   const achievementsList = [
     { id: 1, name: 'Primeiros 10 Cookies!', goal: 10 },
     { id: 2, name: 'Chegou a 100 Cookies!', goal: 100 },
@@ -21,7 +21,37 @@ export default function App() {
     { id: 4, name: '5 Auto-Clickers!', goal: 5, type: 'autoClicker' },
     { id: 5, name: 'Clique Poderoso 10+', goal: 10, type: 'clickPower' },
   ];
+  async function playSound() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('./assets/click.mp3')
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
 
+  useEffect(() => {
+    return sound ? () => sound.unloadAsync() : undefined;
+  }, [sound]);
+
+  const pulseAnimation = () => {
+    Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 1.2,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      })
+    ]).start();
+  };
+
+  const handleClick = () => {
+    setCookies(cookies + clickPower);
+    pulseAnimation();
+    playSound();
   const handleClick = () => {
     setCookies(cookies + clickPower);
     setDailyProgress(prev => prev + clickPower);
@@ -41,7 +71,6 @@ export default function App() {
     }
   };
 
-  // Gera cookies automaticamente
   useEffect(() => {
     const interval = setInterval(() => {
       setCookies(prev => prev + autoClickers);
@@ -49,8 +78,6 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [autoClickers]);
-
-  // Checagem de conquistas
   useEffect(() => {
     achievementsList.forEach(achievement => {
       if (!achievements.includes(achievement.id)) {
@@ -99,9 +126,11 @@ export default function App() {
       <Text style={styles.text}>Meta Diária: {dailyGoal} cookies</Text>
       <Text style={styles.text}>Progresso Diário: {dailyProgress}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleClick}>
-        <Text style={styles.buttonText}>Clique para ganhar cookies!</Text>
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <TouchableOpacity onPress={handleClick}>
+          <Image source={require('./assets/cookie.png')} style={styles.cookieImage} />
+        </TouchableOpacity>
+      </Animated.View>
 
       <TouchableOpacity style={styles.upgradeButton} onPress={buyUpgrade}>
         <Text style={styles.buttonText}>Upgrade (+1 por clique) - 10 cookies</Text>
@@ -133,11 +162,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 10,
   },
-  button: {
-    backgroundColor: '#ff9800',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+  cookieImage: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
   },
   upgradeButton: {
     backgroundColor: '#4caf50',
